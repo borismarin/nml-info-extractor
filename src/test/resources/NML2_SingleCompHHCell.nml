@@ -9,6 +9,56 @@
         <notes>Leak conductance</notes>
     </ionChannelHH>
 
+    <ionChannel id="Gran_CaHVA_98" conductance="10pS" type="ionChannelHH" species="ca">
+
+        <notes>A High Voltage Activated Ca2+ channel</notes>
+
+        <gateHHrates id="m" instances="2">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="17.350264793 degC"/>
+            <notes>Note: offset from ChannelML file incorporated into midpoint of rates!!</notes>
+            <forwardRate type="HHSigmoidRate" rate="1600per_s" scale="0.01388888889V" midpoint="15mV"/>
+            <reverseRate type="HHExpLinearRate" rate="100per_s" scale="-5V" midpoint="0.0011000000000000003V"/>
+        </gateHHrates>
+
+        <gateHHrates id="h"  instances="1">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="17.350264793 degC"/>
+            <notes>Note: offset from ChannelML file incorporated into midpoint of rates!!</notes>
+            <forwardRate type="Gran_CaHVA_98_h_alpha_rate"/>
+            <reverseRate type="Gran_CaHVA_98_h_beta_rate"/>
+        </gateHHrates>
+
+    </ionChannel>
+
+    <ComponentType name="Gran_CaHVA_98_h_alpha_rate" extends="baseVoltageDepRate" xmlns="http://www.neuroml.org/lems/0.9.0">
+        <Constant name="TIME_SCALE" dimension="time" value="1 s"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 V"/>
+        <Constant name="offset" dimension="voltage" value="0.010V"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="(v - offset) / VOLT_SCALE"/>
+            <ConditionalDerivedVariable name="r" exposure="r" dimension="per_time">
+                <Case condition="V   .lt. ( -0.060 )" value="( 5.0 ) / TIME_SCALE"/>
+                <Case condition="V   .geq. ( -0.060 )" value="( 5 * (exp (-50 * (V - (-0.060))))) / TIME_SCALE"/>
+            </ConditionalDerivedVariable>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="Gran_CaHVA_98_h_beta_rate" extends="baseVoltageDepRate" xmlns="http://www.neuroml.org/lems/0.9.0">
+        <Constant name="TIME_SCALE" dimension="time" value="1 s"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 V"/>
+        <Constant name="offset" dimension="voltage" value="0.010V"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="(v - offset) / VOLT_SCALE"/>
+            <ConditionalDerivedVariable name="r" exposure="r" dimension="per_time">
+                <Case condition="V   .lt. ( -0.060 )" value="( 0 ) / TIME_SCALE"/>
+                <Case value="( 5 - (5 * (exp (-50 * (V - (-0.060)))))) / TIME_SCALE"/>
+            </ConditionalDerivedVariable>
+        </Dynamics>
+
+    </ComponentType>
+
 
     <ionChannelHH id="naChan" conductance="10pS" species="na">
         <notes>Na channel</notes>
@@ -58,6 +108,7 @@
                 <channelDensity id="leak" ionChannel="passiveChan" condDensity="3.0 S_per_m2" erev="-54.3mV"/>
                 <channelDensity id="naChans" ionChannel="naChan" condDensity="120.0 mS_per_cm2" erev="50.0 mV" ion="na"/>
                 <channelDensity id="kChans" ionChannel="kChan" condDensity="360 S_per_m2" erev="-77mV" ion="k"/>
+                <channelDensity id="gran_CaHVA_98Chans" ionChannel="Gran_CaHVA_98" condDensity="360 S_per_m2" erev="-77mV" ion="k"/>
 
                 <spikeThresh value="-20mV"/>
                 <specificCapacitance value="1.0 uF_per_cm2"/>
