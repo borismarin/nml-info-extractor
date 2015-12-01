@@ -1,7 +1,9 @@
 package org.neuroml2.export.info;
 
 import java.io.File;
-import java.text.MessageFormat;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.lemsml.model.Case;
 import org.lemsml.model.ConditionalDerivedVariable;
+import org.lemsml.model.compiler.parser.XMLUtils;
 import org.lemsml.model.exceptions.LEMSCompilerException;
 import org.lemsml.model.extended.LemsNode;
 import org.lemsml.model.extended.Scope;
@@ -24,16 +27,12 @@ import org.neuroml2.model.BaseVoltageDepRate;
 import org.neuroml2.model.BaseVoltageDepTime;
 import org.neuroml2.model.BaseVoltageDepVariable;
 import org.neuroml2.model.Cell;
-import org.neuroml2.model.GateHHrates;
-import org.neuroml2.model.GateHHratesInf;
-import org.neuroml2.model.GateHHratesTau;
-import org.neuroml2.model.GateHHratesTauInf;
-import org.neuroml2.model.GateHHtauInf;
 import org.neuroml2.model.IonChannelHH;
 import org.neuroml2.model.NeuroML2ModelReader;
 import org.neuroml2.model.Neuroml2;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.Files;
 
 import expr_parser.utils.ExpressionParser;
 import expr_parser.utils.UndefinedSymbolException;
@@ -50,20 +49,12 @@ public class InfoExtractorTest<V> {
 
 	@Before
 	public void setUp() throws Throwable {
+		File transformed = XMLUtils.transform(getLocalFile("/NML2_SingleCompHHCell.nml"), getLocalFile("/addLemsNS.xslt"));
+		System.out.println(Files.readLines(transformed, StandardCharsets.UTF_8));
 		hh = NeuroML2ModelReader
-				.read(getLocalFile("/NML2_SingleCompHHCell.nml"));
+				.read(getLocalFile("/NML2_SingleCompHHCell_transformed.xml"));
 	}
 
-//	@Test
-	public void channelRatesBAD() throws LEMSCompilerException {
-		for (Cell cell : hh.getCells()) {
-			for (IonChannelHH chan : cell.getAllOfType(IonChannelHH.class)) {
-				for (BaseGate gate : chan.getAllOfType(BaseGate.class)) {
-					System.out.println(gateInfoBAD(gate));
-				}
-			}
-		}
-	}
 
 	@Test
 	public void channelRatesGood() throws LEMSCompilerException,
@@ -105,19 +96,17 @@ public class InfoExtractorTest<V> {
 			throws LEMSCompilerException, UndefinedSymbolException {
 
 		LemsNode type = resolved.getType();
-		FunctionNode f = new FunctionNode();
+		FunctionNodeHelper f = new FunctionNodeHelper();
 		f.setName(resolved.getName());
 		f.register(depsToMathJS(resolved));
 		f.setIndependentVariable("v");
-		f.deRegister("v"); // redundant v=v
 
 		if (type instanceof ConditionalDerivedVariable) {
-			f.deRegister(resolved.getName()); // redundant x=x
 			ConditionalDerivedVariable cdv = (ConditionalDerivedVariable) resolved.getType();
 			f.register(f.getName(), conditionalDVToMathJS(cdv));
 		}
 
-		return f.toString() +"\n";
+		return f.getBigFatExpression(f.getName()) +"\n";
 	}
 
 	public Set<String> findIndependentVariables(String expression,
@@ -151,7 +140,7 @@ public class InfoExtractorTest<V> {
 			throws LEMSCompilerException, UndefinedSymbolException {
 		Map<String, String> ret = new LinkedHashMap<String, String>();
 		Scope scope = resolved.getScope();
-		Map<String, String> sortedContext = scope.buildSortedContext(resolved);
+		Map<String, String> sortedContext = scope.buildTopoSortedContext(resolved);
 		for(Entry<String, String> kv : sortedContext.entrySet()){
 			String var = kv.getKey();
 			String def = kv.getValue();
@@ -166,103 +155,20 @@ public class InfoExtractorTest<V> {
 		return p.parseAndVisitWith(adaptor);
 	}
 
-	private String gateInfoBAD(BaseGate gate) throws LEMSCompilerException {
-		String ret = "";
-		if (gate instanceof GateHHrates) {
-			GateHHrates g = (GateHHrates) gate;
-			ret += MessageFormat.format("rev [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getReverseRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
 
-			ret += MessageFormat.format("fwd [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getForwardRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-		} else if (gate instanceof GateHHratesInf) {
-			GateHHratesInf g = (GateHHratesInf) gate;
-			ret += MessageFormat.format("reverse [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getReverseRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("fwd [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getForwardRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("inf [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getSteadyState().getScope().resolve("x")
-					.getValueDefinition()
-					+ "\n";
-
-		} else if (gate instanceof GateHHratesTau) {
-			GateHHratesTau g = (GateHHratesTau) gate;
-			ret += MessageFormat.format("rev [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getReverseRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("inf [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getForwardRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("tau [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getTimeCourse().getScope().resolve("t")
-					.getValueDefinition()
-					+ "\n";
-		} else if (gate instanceof GateHHratesTauInf) {
-			GateHHratesTauInf g = (GateHHratesTauInf) gate;
-			ret += MessageFormat.format("rev [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getReverseRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("rev [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getForwardRate().getScope().resolve("r")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("tau [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getTimeCourse().getScope().resolve("t")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("inf [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getSteadyState().getScope().resolve("x")
-					.getValueDefinition()
-					+ "\n";
-		} else if (gate instanceof GateHHtauInf) {
-			GateHHtauInf g = (GateHHtauInf) gate;
-
-			ret += MessageFormat.format("tau [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getTimeCourse().getScope().resolve("t")
-					.getValueDefinition()
-					+ "\n";
-
-			ret += MessageFormat.format("inf [{0}]:", g.getComponentType()
-					.getName());
-			ret += g.getSteadyState().getScope().resolve("x")
-					.getValueDefinition()
-					+ "\n";
-		}
-
-		return ret;
+	@Test
+	public void testExpander(){
+		FunctionNodeHelper ex = new FunctionNodeHelper();
+		ex.register("a", "10");
+		ex.register("x10", "a");
+		ex.register("x20", "x10 + a");
+		ex.register("x40", "x20 + x10 / (a+x20)");
+		ex.register("f", "x10 + a*x20 + x^x40");
+		ex.setIndependentVariable("x");
+		System.out.println(ex.getBigFatExpression("x40"));
+		System.out.println(ex.getBigFatExpression("f"));
 	}
+
 
 	protected File getLocalFile(String fname) {
 		return new File(getClass().getResource(fname).getFile());

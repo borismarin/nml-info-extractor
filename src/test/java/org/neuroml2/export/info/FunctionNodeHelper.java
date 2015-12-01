@@ -3,15 +3,21 @@ package org.neuroml2.export.info;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class FunctionNode {
+public class FunctionNodeHelper {
 	private String name;
 	private String independentVariable;
 	private Double[] xRange;
 	private Double deltaX;
-	Map<String, String> context = new LinkedHashMap<String, String>();
+	//context must be toposorted!!
+	LinkedHashMap<String, String> context = new LinkedHashMap<String, String>(){{
+		put("null", "null");
+	}};
+	private LinkedHashMap<String, String> expandedContext;
+
 
 	public void setIndependentVariable(String x) {
 		this.independentVariable = x;
+		this.context.put(independentVariable, independentVariable);
 	}
 
 	public String getExpression() {
@@ -61,4 +67,15 @@ public class FunctionNode {
 	public String toString() {
 		return this.getName()  + ": " + this.context;
 	}
+
+	public String getBigFatExpression(String var){
+		if(expandedContext == null){
+			expandedContext = new LinkedHashMap<String, String>(context);
+			SymbolExpander.expandSymbols(expandedContext, null);
+		}
+		return "f(" + independentVariable + ")="  + expandedContext.get(var);
+	}
+
+
+
 }

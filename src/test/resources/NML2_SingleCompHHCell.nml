@@ -29,7 +29,7 @@
 
     </ionChannel>
 
-    <ComponentType name="Gran_CaHVA_98_h_alpha_rate" extends="baseVoltageDepRate" xmlns="http://www.neuroml.org/lems/0.9.0">
+    <ComponentType name="Gran_CaHVA_98_h_alpha_rate" extends="baseVoltageDepRate">
         <Constant name="TIME_SCALE" dimension="time" value="1 s"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 V"/>
         <Constant name="offset" dimension="voltage" value="0.010V"/>
@@ -44,7 +44,7 @@
 
     </ComponentType>
 
-    <ComponentType name="Gran_CaHVA_98_h_beta_rate" extends="baseVoltageDepRate" xmlns="http://www.neuroml.org/lems/0.9.0">
+    <ComponentType name="Gran_CaHVA_98_h_beta_rate" extends="baseVoltageDepRate" >
         <Constant name="TIME_SCALE" dimension="time" value="1 s"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 V"/>
         <Constant name="offset" dimension="voltage" value="0.010V"/>
