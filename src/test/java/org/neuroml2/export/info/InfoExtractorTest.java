@@ -1,9 +1,6 @@
 package org.neuroml2.export.info;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +14,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.lemsml.model.Case;
 import org.lemsml.model.ConditionalDerivedVariable;
-import org.lemsml.model.compiler.parser.XMLUtils;
 import org.lemsml.model.exceptions.LEMSCompilerException;
 import org.lemsml.model.extended.LemsNode;
 import org.lemsml.model.extended.Scope;
@@ -32,7 +28,6 @@ import org.neuroml2.model.NeuroML2ModelReader;
 import org.neuroml2.model.Neuroml2;
 
 import com.google.common.base.Joiner;
-import com.google.common.io.Files;
 
 import expr_parser.utils.ExpressionParser;
 import expr_parser.utils.UndefinedSymbolException;
@@ -49,10 +44,8 @@ public class InfoExtractorTest<V> {
 
 	@Before
 	public void setUp() throws Throwable {
-		File transformed = XMLUtils.transform(getLocalFile("/NML2_SingleCompHHCell.nml"), getLocalFile("/addLemsNS.xslt"));
-		System.out.println(Files.readLines(transformed, StandardCharsets.UTF_8));
 		hh = NeuroML2ModelReader
-				.read(getLocalFile("/NML2_SingleCompHHCell_transformed.xml"));
+				.read(getLocalFile("/NML2_SingleCompHHCell.nml"));
 	}
 
 
