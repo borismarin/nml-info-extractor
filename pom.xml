@@ -6,6 +6,13 @@
 	<name>NeuroML2 info extractor</name>
 	<url>https://neuroml.org/</url>
 
+	<repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -13,9 +20,9 @@
 			<version>4.12</version>
 		</dependency>
 		<dependency>
-			<groupId>org.neuroml2.model</groupId>
-			<artifactId>neuroml2-model</artifactId>
-			<version>0.1-SNAPSHOT</version>
+			<groupId>com.github.borismarin</groupId>
+			<artifactId>neuroml2model</artifactId>
+			<version>-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<artifactId>neuroml2-info-extractor</artifactId>
