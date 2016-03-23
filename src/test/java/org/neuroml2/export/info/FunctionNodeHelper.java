@@ -3,13 +3,20 @@ package org.neuroml2.export.info;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import expr_parser.utils.SymbolExpander;
+import expr_parser.visitors.AntlrExpressionParser;
+import expr_parser.visitors.RenderLatex;
+
 public class FunctionNodeHelper {
 	private String name;
 	private String independentVariable;
 	private Double[] xRange;
 	private Double deltaX;
 	//context must be toposorted!!
-	LinkedHashMap<String, String> context = new LinkedHashMap<String, String>(){{
+	LinkedHashMap<String, String> context = new LinkedHashMap<String, String>(){
+		private static final long serialVersionUID = 1242351L;
+	{
+		//null is allowed in the antlr lems grammar
 		put("null", "null");
 	}};
 	private LinkedHashMap<String, String> expandedContext;
@@ -68,10 +75,16 @@ public class FunctionNodeHelper {
 		return this.getName()  + ": " + this.context;
 	}
 
+	public String toTeX() {
+		RenderLatex adaptor = new RenderLatex();
+		AntlrExpressionParser p = new AntlrExpressionParser(getExpression());
+		return p.parseAndVisitWith(adaptor);
+	}
+
 	public String getBigFatExpression(String var){
 		if(expandedContext == null){
 			expandedContext = new LinkedHashMap<String, String>(context);
-			SymbolExpander.expandSymbols(expandedContext, null);
+			SymbolExpander.expandSymbols(expandedContext);
 		}
 		return "f(" + independentVariable + ")="  + expandedContext.get(var);
 	}

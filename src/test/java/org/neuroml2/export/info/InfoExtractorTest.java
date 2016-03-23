@@ -44,8 +44,7 @@ public class InfoExtractorTest<V> {
 
 	@Before
 	public void setUp() throws Throwable {
-		hh = NeuroML2ModelReader
-				.read(getLocalFile("/NML2_SingleCompHHCell.nml"));
+		hh = NeuroML2ModelReader.read(getLocalFile("/NML2_SingleCompHHCell.nml"));
 	}
 
 
@@ -58,14 +57,14 @@ public class InfoExtractorTest<V> {
 				System.out.println("channel:" + chan.getName());
 				for (BaseGate gate : chan.getAllOfType(BaseGate.class)) {
 					System.out.println("gate:" + gate.getName());
-					System.out.println(gateInfoGood(gate));
+					System.out.println(gateInfo(gate));
 				}
 				System.out.println("#############################\n\n");
 			}
 		}
 	}
 
-	private String gateInfoGood(BaseGate gate) throws LEMSCompilerException,
+	private String gateInfo(BaseGate gate) throws LEMSCompilerException,
 			UndefinedSymbolException {
 		String ret = "";
 		for (BaseVoltageDepRate r : gate.getAllOfType(BaseVoltageDepRate.class)) {
